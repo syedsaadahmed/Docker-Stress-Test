@@ -1,0 +1,166 @@
+
+
+<!DOCTYPE html> 
+<html lang=en>
+<head>
+  <meta charset=utf-8> 
+  <meta content="IE=edge" http-equiv=X-UA-Compatible> 
+  <meta content="width=device-width,initial-scale=1" name=viewport> 
+  <meta charset="utf-8">
+
+  <title>Docker Stress Tester</title>
+  <!-- developed by Saad Arshad & M.Hassan  -->
+  <!--[if lt IE 9]>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
+  <![endif]-->
+<style>.total_results{ font-size:11px; }</style>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="
+sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+
+<link href="https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300" rel="stylesheet"> 
+
+<style type="text/css">
+  *{
+    font-family: 'Open Sans Condensed', sans-serif;
+  }
+
+</style>
+
+</head>
+<body>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <h1 class="bd-title text-center" id="content">Docker Stress Tester</h1>
+        </div>
+        <div class="col-md-6">
+         <form>
+          <div class="form-group">
+            <label for="server">Server DNS</label>
+            <input type="text" class="form-control" id="server_dns" name="server_dns">
+          </div>
+          <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" class="form-control" id="username"  name="username" >
+          </div>
+          <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" class="form-control" id="password" name="password">
+          </div>
+          <div class="form-group">
+            <label for="connections">Connection:</label>
+            <input type="number" class="form-control" id="connections" id="connection" min="0" max="10">
+          </div>
+          <div class="form-group">
+            <label for="time">Container Timeout: (In Minutes)</label>
+            <input class="form-control" id="time" name="time" type="number" min="0" max="30"/> 
+          </div>
+        <div class="form-group ">
+          <label for="protocol">Protocol</label>
+          <select name="protocol" id="protocol" class="form-control">
+            <option value="openvpn_tcp">OPENVPN TCP</option>
+            <option value="openvpn_udp">OPENVPN UDP</option>
+          </select>
+         </div>
+
+          <button type="button" class="btn btn-default pull-right" id="add_records">Send Load</button>
+          
+          <br>
+        </form> 
+        </div>
+
+        <div class="col-md-6">
+
+          <pre class="oplogs" style="font-size: 11px;height: 150px;overflow-y: scroll;white-space: normal;width: 100%;"></pre>
+          <button type="button" class="btn btn-default pull-right" id="kill_containers">KILL ALL CONTAINERS</button>
+          <br>
+          <div class="res"> no containers created. </div>  
+
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer" style="background-color: #f5f5f5;bottom: 0;height: 20px;width: 100%; position: fixed; border-top: 1px solid #e1e1e1;">
+      <div class="container">
+        <span class="text-muted text-center">Docker.</span>
+      </div>
+    </footer>
+
+  <script type="text/javascript">
+  function log(log){
+    $("pre.oplogs").append(log)
+    $("pre.oplogs").append('\n')
+  }
+    $(document).ready(function(){
+
+      $('#add_records').click(function(){
+            log('sending request');
+            var params = {
+
+              _server_dns : $('#server_dns').val(),
+              _username : $('#username').val(),
+              _password : $('#password').val(),
+              //_port : $('#port').val(),              
+              _connections : $('#connections').val(),
+              _time : $('#time').val(),
+              _protocol: $('#protocol').val()
+            }; 
+            params._time=params._time*60;
+            var array = JSON.stringify(params);
+
+          $.ajax({                
+            data: array,   
+            type: "POST",
+            headers: { "Content-Type": "application/json"},
+            url :"/",
+            success: function(data) {
+              var res = JSON.parse(data)
+              $.each(res, function(idx, obj) {
+                html = ''  
+
+html = "<div id='"+obj+"' class='responsive_masterdiv'>container "+(idx+1)+":<a target='_blank' href='/logs?id="+obj+"'>"+obj+"</a> | <a target='_blank' href='/kill_cont?id="+obj+"'><i class='fa fa-trash' aria-hidden='true'></i></a></div>"
+
+            
+            $(".res").append(html)
+
+              });
+
+              log('completed');
+            },
+            error: function(err){
+                log('error. something went wrong<br>')
+                log(err)
+            }
+          }); 
+    });
+
+
+
+      $('#kill_containers').click(function(){
+              $.ajax({
+                  type: "GET",
+                  url: "/kill",
+                  success: function(data) {
+                    log('done')
+                }
+            });
+              alert('All Containers Removed !')
+      });
+
+
+
+
+});
+
+</script>
+
+</body>
+</html>

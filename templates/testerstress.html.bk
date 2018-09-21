@@ -1,0 +1,122 @@
+
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+</head>
+<body style="padding-bottom: 30px;padding-top: 70px;">
+
+    <div class="container">
+
+     <div class="form-group ">
+      <label class="control-label" for="server_dns">
+       server DNS
+      </label>
+      <input size="23" id="server_dns" name="server_dns" type="text"/> 
+     </div>
+
+     <div class="form-group ">
+      <label class="control-label" for="username">
+       username
+      </label>
+      <input size="23" id="username" name="username" type="text"/> 
+     </div>
+
+     <div class="form-group ">
+      <label class="control-label" for="password">
+       Password
+      </label>
+      <input size="23" id="password" name="password" type="text"/>
+     </div>
+
+    <div class="form-group ">
+      <label class="control-label" for="connections">
+        Connections
+      </label>
+      <input size="25" id="connections" name="connections" type="number" min="0" max="10"/> 
+     </div>
+
+    <div class="form-group ">
+      <label class="control-label" for="time">
+        Time (In Minutes)
+      </label>
+      <input size="25" id="time" name="time" type="number" min="0" max="30"/> 
+     </div>
+
+    <button type="button" class="btn btn-default pull-right" id="add_records">SUBMIT</button>
+    <button type="button" class="btn btn-default pull-right" id="kill_containers">KILL ALL</button>
+
+   <div class="res"></div> 
+
+
+     </div><!-- /.container -->
+     <pre class="oplogs" style="position: fixed;right: 0; top: 0; background:rgba(255,255,255,0.5); color:#999;padding: 5px; border: 1px solid #888; width: 200px; height: 200px;font-size: 11px;"></pre>
+
+  <script type="text/javascript">
+  function log(log){
+    $("pre.oplogs").append(log)
+    $("pre.oplogs").append('\n')
+  }
+    $(document).ready(function(){
+
+      $('#add_records').click(function(){
+            log('sending request');
+            var params = {
+
+              _server_dns : $('#server_dns').val(),
+              _username : $('#username').val(),
+              _password : $('#password').val(),
+              //_port : $('#port').val(),              
+              _connections : $('#connections').val(),
+              _time : $('#time').val()
+            }; 
+            params._time=params._time*60;
+            var array = JSON.stringify(params);
+
+          $.ajax({                
+            data: array,   
+            type: "POST",
+            headers: { "Content-Type": "application/json"},
+            url :"/",
+            success: function(data) {
+              var res = JSON.parse(data)
+              $.each(res, function(idx, obj) {
+                html = ''  
+                html2 = ''
+
+html = "<div id='"+obj+"' class='responsive_masterdiv'>container "+(idx+1)+":<a target='_blank' href='localhost:5000/logs?id="+obj+"'>"+obj+"</a></div>"
+
+                $(".res").append(html)
+
+              });
+
+              log('completed');
+            },
+            error: function(err){
+                log('error. something went wrong')
+                log(err)
+            }
+          }); 
+    });
+
+
+
+      $('#kill_containers').click(function(){
+              $.ajax({
+                  type: "GET",
+                  url: "/kill",
+                  success: function(data) {
+                    log('done')
+                }
+            });
+              alert('All Containers Removed !')
+      });
+
+
+
+
+});
+
+</script>
+
+</body>
+</html>
